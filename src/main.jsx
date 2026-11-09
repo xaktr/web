@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import './styles.css';
 
+const logoUrl = `${import.meta.env.BASE_URL}logo.svg`;
+
 const projects = [
   {
     number: '01',
@@ -53,7 +55,7 @@ function App() {
       <div className="grain" aria-hidden="true" />
       <header className={`topbar ${scrolled ? 'topbar-scrolled' : ''}`}>
         <a href="#home" className="wordmark" onClick={closeMenu} aria-label="Back to home">
-          <img src="/logo.svg" alt="AR" className="site-logo" />
+          <img src={logoUrl} alt="AR" className="site-logo" />
         </a>
         <nav className={`nav-links ${menuOpen ? 'nav-open' : ''}`}>
           <a href="#about" onClick={closeMenu}><span>01</span> About</a>
@@ -215,7 +217,7 @@ function App() {
               </div>
             </div>            <footer className="footer">
               <a href="#home" className="footer-logo" aria-label="Back to top">
-                <img src="/logo.svg" alt="AR" className="site-logo footer-logo-img" />
+                <img src={logoUrl} alt="AR" className="site-logo footer-logo-img" />
               </a>
               <span>Always Curious</span>
               <a href="#home" className="back-top">BACK TO TOP <ArrowUpRight size={14} /></a>
