@@ -19,14 +19,10 @@ export default function NemoPage({ onBack }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  useEffect(() => {
-    if (!simActive) return;
-    const interval = setInterval(() => {
-      setPingCount((p) => p + 1);
-      setCurrentRange((r) => +(18.0 + (Math.sin(Date.now() / 1500) * 1.5)).toFixed(1));
-    }, 1200);
-    return () => clearInterval(interval);
-  }, [simActive]);
+  const handlePingUpdate = React.useCallback((p, r) => {
+    setPingCount(p);
+    setCurrentRange(r);
+  }, []);
 
   return (
     <div className="nemo-page site-shell">
@@ -186,10 +182,7 @@ export default function NemoPage({ onBack }) {
             <SonarWaterfall
               viewMode={viewMode}
               simActive={simActive}
-              onPingUpdate={(p, r) => {
-                setPingCount(p);
-                setCurrentRange(r);
-              }}
+              onPingUpdate={handlePingUpdate}
             />
 
             {/* Telemetry Row */}

@@ -1,19 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * AcousticWaterfall: High-fidelity Side-Scan Sonar (SSS) Waterfall Canvas Simulator
- * Simulates raw .XTF acoustic ping ingestion, CLAHE contrast enhancement,
- * and cascaded YOLO26n + Attention U-Net target detection on edge hardware.
+ * SonarWaterfall: High-performance, Hardware-Accelerated Side-Scan Sonar Waterfall
+ * Uses GPU-accelerated offscreen canvas buffering to prevent flickering and eliminate CPU bottlenecks.
  */
 export default function SonarWaterfall({ viewMode = 'detection', simActive = true, onPingUpdate }) {
   const canvasRef = useRef(null);
   const animRef = useRef(null);
-  const stateRef = useRef({
-    offset: 0,
-    targetY: 120, // initial Y position of the target
-    lastTime: performance.now(),
-    ping: 1482
-  });
+
+  // Keep references to props so they don't re-trigger the canvas animation loop
+  const propsRef = useRef({ viewMode, simActive, onPingUpdate });
+  useEffect(() => {
+    propsRef.current = { viewMode, simActive, onPingUpdate };
+  }, [viewMode, simActive, onPingUpdate]);
 
   const [telemetry, setTelemetry] = useState({
     ping: 1482,
@@ -28,40 +27,153 @@ export default function SonarWaterfall({ viewMode = 'detection', simActive = tru
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false });
 
     const width = 800;
     const height = 300;
     canvas.width = width;
     canvas.height = height;
 
-    // Pre-generate pseudo-random acoustic texture seed to keep rendering fast & stable
-    const textureHeight = height * 2;
-    const noiseBuffer = new Uint8Array(width * textureHeight);
-    for (let i = 0; i < noiseBuffer.length; i++) {
-      noiseBuffer[i] = Math.floor(Math.random() * 256);
+    // --- 1. BUILD OFFSCREEN TEXTURE CANVAS (Generates ONCE per viewMode) ---
+    // Offscreen canvas is 2x height (600px) so it tiles seamlessly
+    const texHeight = 600;
+    const offscreen = document.createElement('canvas');
+    offscreen.width = width;
+    offscreen.height = texHeight;
+    const offCtx = offscreen.getContext('2d');
+
+    const midX = width / 2;
+    const nadirWidth = 46;
+    const portWidth = midX - nadirWidth / 2;
+
+    const imgData = offCtx.createImageData(width, texHeight);
+    const data = imgData.data;
+
+    // Fast PRNG for reproducible acoustic noise
+    let seed = 42;
+    const pseudoRandom = () => {
+      seed = (seed * 16807) % 2147483647;
+      return (seed - 1) / 2147483646;
+    };
+
+    for (let y = 0; y < texHeight; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = (y * width + x) * 4;
+        const distFromCenter = Math.abs(x - midX);
+
+        // Nadir gap (Water column blind zone directly beneath AUV)
+        if (distFromCenter < nadirWidth / 2) {
+          const n = pseudoRandom() * 15;
+          data[idx] = 8 + n;
+          data[idx + 1] = 12 + n;
+          data[idx + 2] = 18 + n;
+          data[idx + 3] = 255;
+          continue;
+        }
+
+        const swathRange = (distFromCenter - nadirWidth / 2) / portWidth;
+        const falloff = Math.max(0.18, 1.0 - Math.pow(swathRange, 1.3) * 0.65);
+        const ripple = Math.sin((x * 0.08) + (y * 0.04) + Math.sin(x * 0.015) * 3) * 16;
+        const noise = pseudoRandom() * 255;
+
+        let intensity = 0;
+
+        if (viewMode === 'raw') {
+          // RAW XTF: Amber acoustic palette with speckle
+          intensity = (noise * 0.65 + ripple) * falloff;
+          data[idx] = Math.min(255, intensity * 0.95);
+          data[idx + 1] = Math.min(255, intensity * 0.75);
+          data[idx + 2] = Math.min(255, intensity * 0.42);
+        } else if (viewMode === 'clahe') {
+          // CLAHE: Equalized cyan-gray acoustic palette
+          const smoothed = (noise * 0.35 + 85 + ripple * 1.5) * falloff;
+          intensity = Math.min(255, Math.pow(smoothed / 255, 0.75) * 265);
+          data[idx] = Math.min(255, intensity * 0.6);
+          data[idx + 1] = Math.min(255, intensity * 0.75);
+          data[idx + 2] = Math.min(255, intensity * 0.95);
+        } else {
+          // CASCADED AI: Cobalt marine palette
+          const smoothed = (noise * 0.38 + 80 + ripple * 1.2) * falloff;
+          intensity = Math.min(255, Math.pow(smoothed / 255, 0.8) * 260);
+          data[idx] = Math.min(255, intensity * 0.55);
+          data[idx + 1] = Math.min(255, intensity * 0.72);
+          data[idx + 2] = Math.min(255, intensity * 0.98);
+        }
+
+        data[idx + 3] = 255;
+      }
     }
 
+    offCtx.putImageData(imgData, 0, 0);
+
+    // Target position inside the 600px offscreen buffer
+    const targetBaseY = 220;
+    const targetX = midX + 160;
+    const targetW = 42;
+    const targetH = 28;
+    const shadowW = 85;
+
+    // A) Draw Acoustic Shadow into Offscreen Canvas
+    offCtx.fillStyle = 'rgba(2, 4, 7, 0.96)';
+    offCtx.beginPath();
+    offCtx.moveTo(targetX + targetW, targetBaseY);
+    offCtx.lineTo(targetX + targetW + shadowW, targetBaseY - 5);
+    offCtx.lineTo(targetX + targetW + shadowW + 12, targetBaseY + targetH + 10);
+    offCtx.lineTo(targetX + targetW, targetBaseY + targetH);
+    offCtx.closePath();
+    offCtx.fill();
+
+    // B) Draw Acoustic Highlight into Offscreen Canvas
+    const highlightGrad = offCtx.createLinearGradient(targetX, targetBaseY, targetX + targetW, targetBaseY);
+    if (viewMode === 'raw') {
+      highlightGrad.addColorStop(0, '#ffe0a0');
+      highlightGrad.addColorStop(1, '#ffc060');
+    } else {
+      highlightGrad.addColorStop(0, '#ffffff');
+      highlightGrad.addColorStop(1, '#9eb4ff');
+    }
+    offCtx.fillStyle = highlightGrad;
+    offCtx.beginPath();
+    offCtx.roundRect(targetX, targetBaseY, targetW, targetH, 4);
+    offCtx.fill();
+
+    // Subtle net cross-hatch texture on object
+    offCtx.strokeStyle = 'rgba(15, 25, 45, 0.65)';
+    offCtx.lineWidth = 1.5;
+    offCtx.beginPath();
+    offCtx.moveTo(targetX + 6, targetBaseY + 4);
+    offCtx.lineTo(targetX + targetW - 6, targetBaseY + targetH - 4);
+    offCtx.moveTo(targetX + targetW - 6, targetBaseY + 4);
+    offCtx.lineTo(targetX + 6, targetBaseY + targetH - 4);
+    offCtx.stroke();
+
+    // --- 2. GPU-ACCELERATED RENDER LOOP ---
+    let scrollY = 0;
+    let pingCounter = 1482;
+    let lastTime = performance.now();
     let isRunning = true;
+    let lastTelemetryUpdate = 0;
 
     const render = (time) => {
       if (!isRunning) return;
 
-      const state = stateRef.current;
-      const dt = (time - state.lastTime) / 1000;
-      state.lastTime = time;
+      const dt = Math.min(0.05, (time - lastTime) / 1000); // cap dt to avoid giant leaps
+      lastTime = time;
 
-      // Scroll speed: 45 pixels per second when active
+      const { simActive, onPingUpdate } = propsRef.current;
+
       if (simActive) {
-        state.offset = (state.offset + dt * 48) % height;
-        state.targetY = (state.targetY + dt * 48) % (height + 120);
-        state.ping += dt * 15; // 15 Hz ping rate
+        // Scroll at constant 42px per second
+        scrollY = (scrollY + dt * 42) % texHeight;
+        pingCounter += dt * 15;
 
-        // Periodic telemetry drift
-        if (Math.random() < 0.05) {
-          const p = Math.floor(state.ping);
-          const r = +(18.0 + Math.sin(time / 1400) * 1.6).toFixed(1);
+        // Throttled telemetry update (every 400ms) - DOES NOT RECREATE CANVAS
+        if (time - lastTelemetryUpdate > 400) {
+          lastTelemetryUpdate = time;
+          const p = Math.floor(pingCounter);
+          const r = +(18.0 + Math.sin(time / 1400) * 1.5).toFixed(1);
           const alt = +(6.8 + Math.cos(time / 2000) * 0.3).toFixed(1);
+
           setTelemetry(prev => ({
             ...prev,
             ping: p,
@@ -69,210 +181,95 @@ export default function SonarWaterfall({ viewMode = 'detection', simActive = tru
             altitude: alt,
             lat: `12°58'${(24.8 + (time * 0.00001) % 0.8).toFixed(1)}"N`
           }));
+
           if (onPingUpdate) onPingUpdate(p, r);
         }
       }
 
-      // Clear Canvas
-      ctx.fillStyle = '#0a0d12';
-      ctx.fillRect(0, 0, width, height);
+      // 1. Blit offscreen buffer onto main canvas via GPU (sub-millisecond drawImage)
+      const sy = Math.floor(scrollY);
+      const remainingH = texHeight - sy;
 
-      const midX = width / 2;
-      const nadirWidth = 44; // Central water column blind zone
-      const portWidth = midX - nadirWidth / 2;
-      const starboardStart = midX + nadirWidth / 2;
-
-      // 1. Draw Acoustic Swath Background (Port & Starboard)
-      // Different color palettes per mode:
-      // - raw: noisy sepia/amber acoustic palette
-      // - clahe: high-contrast blue-gray acoustic palette
-      // - detection: crisp high-res tactical palette with AI overlay
-      const imgData = ctx.createImageData(width, height);
-      const data = imgData.data;
-
-      const offsetFloor = Math.floor(state.offset);
-
-      for (let y = 0; y < height; y++) {
-        const noiseY = (y + offsetFloor) % textureHeight;
-        const pingNoiseIdx = noiseY * width;
-
-        for (let x = 0; x < width; x++) {
-          const pixelIdx = (y * width + x) * 4;
-
-          // Check if inside Nadir gap (Water column blind zone)
-          const distFromCenter = Math.abs(x - midX);
-          if (distFromCenter < nadirWidth / 2) {
-            // Dark water column with subtle faint reverberation
-            const nVal = noiseBuffer[pingNoiseIdx + x] * 0.08;
-            data[pixelIdx] = 10 + nVal;
-            data[pixelIdx + 1] = 14 + nVal;
-            data[pixelIdx + 2] = 20 + nVal;
-            data[pixelIdx + 3] = 255;
-            continue;
-          }
-
-          // Relative range along the swath (0 at nadir edge, 1 at swath boundary)
-          const swathRange = (distFromCenter - nadirWidth / 2) / portWidth;
-          
-          // Grazing angle falloff + seabed sand ripples
-          const falloff = Math.max(0.2, 1.0 - Math.pow(swathRange, 1.4) * 0.65);
-          const ripple = Math.sin((x * 0.08) + (y * 0.04) + Math.sin(x * 0.015) * 3) * 18;
-          const rawNoise = noiseBuffer[pingNoiseIdx + x];
-
-          let intensity = 0;
-
-          if (viewMode === 'raw') {
-            // RAW XTF: High speckle noise, lower SNR
-            intensity = (rawNoise * 0.65 + ripple) * falloff;
-            // Amber/Copper acoustic phosphor colormap
-            data[pixelIdx] = Math.min(255, intensity * 0.95);     // R
-            data[pixelIdx + 1] = Math.min(255, intensity * 0.75); // G
-            data[pixelIdx + 2] = Math.min(255, intensity * 0.42); // B
-          } else if (viewMode === 'clahe') {
-            // CLAHE: Lee-despeckled + contrast equalization
-            const smoothed = (rawNoise * 0.35 + 80 + ripple * 1.5) * falloff;
-            intensity = Math.min(255, Math.pow(smoothed / 255, 0.75) * 270);
-            // Crisp cyan-gray acoustic colormap
-            data[pixelIdx] = Math.min(255, intensity * 0.6);
-            data[pixelIdx + 1] = Math.min(255, intensity * 0.75);
-            data[pixelIdx + 2] = Math.min(255, intensity * 0.95);
-          } else {
-            // CASCADED AI Mode: High-contrast cobalt marine colormap
-            const smoothed = (rawNoise * 0.4 + 75 + ripple * 1.2) * falloff;
-            intensity = Math.min(255, Math.pow(smoothed / 255, 0.8) * 260);
-            data[pixelIdx] = Math.min(255, intensity * 0.55);
-            data[pixelIdx + 1] = Math.min(255, intensity * 0.72);
-            data[pixelIdx + 2] = Math.min(255, intensity * 0.98);
-          }
-
-          data[pixelIdx + 3] = 255;
-        }
+      if (remainingH >= height) {
+        ctx.drawImage(offscreen, 0, sy, width, height, 0, 0, width, height);
+      } else {
+        // Tile wrap
+        ctx.drawImage(offscreen, 0, sy, width, remainingH, 0, 0, width, remainingH);
+        ctx.drawImage(offscreen, 0, 0, width, height - remainingH, 0, remainingH, width, height - remainingH);
       }
 
-      ctx.putImageData(imgData, 0, 0);
+      // Calculate where the target is currently located on screen
+      let currentScreenTargetY = (targetBaseY - sy);
+      if (currentScreenTargetY < -60) currentScreenTargetY += texHeight;
 
-      // 2. Render Target Anomaly (Acoustic Highlight + Shadow)
-      const targetScreenY = state.targetY - 40;
-      const targetX = midX + 160; // In Starboard swath (~18m range)
-      const targetW = 38;
-      const targetH = 26;
-      const shadowW = 75; // Acoustic shadow extends outward from acoustic beam
+      // 2. Render AI Detection HUD (when in 'detection' mode and target is visible)
+      if (viewMode === 'detection' && currentScreenTargetY > -50 && currentScreenTargetY < height + 40) {
+        const boxPad = 8;
+        const boxX = targetX - boxPad;
+        const boxY = currentScreenTargetY - boxPad;
+        const boxW = targetW + shadowW + boxPad * 2;
+        const boxH = targetH + boxPad * 2;
 
-      if (targetScreenY > -60 && targetScreenY < height + 40) {
-        // A) Acoustic Shadow (Sound blocked by object, completely dark on seabed)
-        ctx.fillStyle = 'rgba(4, 6, 9, 0.94)';
-        ctx.beginPath();
-        ctx.moveTo(targetX + targetW, targetScreenY);
-        ctx.lineTo(targetX + targetW + shadowW, targetScreenY - 4);
-        ctx.lineTo(targetX + targetW + shadowW + 8, targetScreenY + targetH + 8);
-        ctx.lineTo(targetX + targetW, targetScreenY + targetH);
-        ctx.closePath();
-        ctx.fill();
-
-        // Highlight/Shadow boundary indicator in AI detection mode
-        if (viewMode === 'detection') {
-          ctx.strokeStyle = 'rgba(116, 123, 131, 0.8)';
-          ctx.setLineDash([3, 3]);
-          ctx.lineWidth = 1;
-          ctx.stroke();
-          ctx.setLineDash([]);
-        }
-
-        // B) Acoustic Highlight (Strong backscatter reflection off object)
-        const highlightGrad = ctx.createLinearGradient(targetX, targetScreenY, targetX + targetW, targetScreenY);
-        if (viewMode === 'raw') {
-          highlightGrad.addColorStop(0, '#ffe0a0');
-          highlightGrad.addColorStop(1, '#ffc060');
-        } else {
-          highlightGrad.addColorStop(0, '#ffffff');
-          highlightGrad.addColorStop(1, '#9eb4ff');
-        }
-
-        ctx.fillStyle = highlightGrad;
-        ctx.beginPath();
-        ctx.roundRect(targetX, targetScreenY, targetW, targetH, 4);
-        ctx.fill();
-
-        // Ghost net texture lines
-        ctx.strokeStyle = 'rgba(20, 30, 50, 0.6)';
+        // Bounding Box
+        ctx.strokeStyle = '#3458d4';
         ctx.lineWidth = 1.5;
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+        // Corner reticles
+        const cornerLen = 10;
+        ctx.strokeStyle = '#6a8aff';
+        ctx.lineWidth = 2.5;
+
+        // Top-Left
         ctx.beginPath();
-        ctx.moveTo(targetX + 6, targetScreenY + 4);
-        ctx.lineTo(targetX + targetW - 6, targetScreenY + targetH - 4);
-        ctx.moveTo(targetX + targetW - 6, targetScreenY + 4);
-        ctx.lineTo(targetX + 6, targetScreenY + targetH - 4);
+        ctx.moveTo(boxX, boxY + cornerLen);
+        ctx.lineTo(boxX, boxY);
+        ctx.lineTo(boxX + cornerLen, boxY);
         ctx.stroke();
 
-        // 3. AI Detection Overlay (When in CASCADED AI Mode)
-        if (viewMode === 'detection') {
-          const boxPad = 8;
-          const boxX = targetX - boxPad;
-          const boxY = targetScreenY - boxPad;
-          const boxW = targetW + shadowW + boxPad * 2;
-          const boxH = targetH + boxPad * 2;
+        // Top-Right
+        ctx.beginPath();
+        ctx.moveTo(boxX + boxW - cornerLen, boxY);
+        ctx.lineTo(boxX + boxW, boxY);
+        ctx.lineTo(boxX + boxW, boxY + cornerLen);
+        ctx.stroke();
 
-          // Bounding Box
-          ctx.strokeStyle = '#3458d4';
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(boxX, boxY, boxW, boxH);
+        // Bottom-Left
+        ctx.beginPath();
+        ctx.moveTo(boxX, boxY + boxH - cornerLen);
+        ctx.lineTo(boxX, boxY + boxH);
+        ctx.lineTo(boxX + cornerLen, boxY + boxH);
+        ctx.stroke();
 
-          // Corner reticles
-          const cornerLen = 10;
-          ctx.strokeStyle = '#6a8aff';
-          ctx.lineWidth = 2.5;
+        // Bottom-Right
+        ctx.beginPath();
+        ctx.moveTo(boxX + boxW - cornerLen, boxY + boxH);
+        ctx.lineTo(boxX + boxW, boxY + boxH);
+        ctx.lineTo(boxX + boxW, boxY + boxH - cornerLen);
+        ctx.stroke();
 
-          // Top-Left
-          ctx.beginPath();
-          ctx.moveTo(boxX, boxY + cornerLen);
-          ctx.lineTo(boxX, boxY);
-          ctx.lineTo(boxX + cornerLen, boxY);
-          ctx.stroke();
+        // Pill Label
+        ctx.fillStyle = '#3458d4';
+        ctx.fillRect(boxX, boxY - 20, 172, 19);
 
-          // Top-Right
-          ctx.beginPath();
-          ctx.moveTo(boxX + boxW - cornerLen, boxY);
-          ctx.lineTo(boxX + boxW, boxY);
-          ctx.lineTo(boxX + boxW, boxY + cornerLen);
-          ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 9px "DM Mono", monospace';
+        ctx.fillText('YOLO26n · GHOST_NET: 95.4%', boxX + 6, boxY - 7);
 
-          // Bottom-Left
-          ctx.beginPath();
-          ctx.moveTo(boxX, boxY + boxH - cornerLen);
-          ctx.lineTo(boxX, boxY + boxH);
-          ctx.lineTo(boxX + cornerLen, boxY + boxH);
-          ctx.stroke();
+        // Sub-HUD telemetry
+        ctx.fillStyle = 'rgba(13, 17, 23, 0.92)';
+        ctx.fillRect(boxX, boxY + boxH + 3, 188, 26);
+        ctx.strokeStyle = '#2e3440';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(boxX, boxY + boxH + 3, 188, 26);
 
-          // Bottom-Right
-          ctx.beginPath();
-          ctx.moveTo(boxX + boxW - cornerLen, boxY + boxH);
-          ctx.lineTo(boxX + boxW, boxY + boxH);
-          ctx.lineTo(boxX + boxW, boxY + boxH - cornerLen);
-          ctx.stroke();
-
-          // Target Label Pill
-          ctx.fillStyle = '#3458d4';
-          ctx.fillRect(boxX, boxY - 20, 168, 19);
-
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 9px "DM Mono", monospace';
-          ctx.fillText('YOLO26n · GHOST_NET: 95.4%', boxX + 6, boxY - 7);
-
-          // Secondary Telemetry Label
-          ctx.fillStyle = 'rgba(13, 17, 23, 0.9)';
-          ctx.fillRect(boxX, boxY + boxH + 3, 185, 26);
-          ctx.strokeStyle = '#2e3440';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(boxX, boxY + boxH + 3, 185, 26);
-
-          ctx.fillStyle = '#9eb4ff';
-          ctx.font = '8px "DM Mono", monospace';
-          ctx.fillText(`RANGE: ${telemetry.range}m · SHADOW_H: 1.4m`, boxX + 6, boxY + boxH + 14);
-          ctx.fillText(`GEO: ${telemetry.lat}, ${telemetry.lon}`, boxX + 6, boxY + boxH + 24);
-        }
+        ctx.fillStyle = '#9eb4ff';
+        ctx.font = '8px "DM Mono", monospace';
+        ctx.fillText(`RANGE: ${telemetry.range}m · SHADOW_H: 1.4m`, boxX + 6, boxY + boxH + 14);
+        ctx.fillText(`GEO: ${telemetry.lat}, ${telemetry.lon}`, boxX + 6, boxY + boxH + 24);
       }
 
-      // 4. Draw Nadir Line & Swath Grid Overlays
-      // Nadir center line
+      // 3. Grid & Nadir Overlays
       ctx.strokeStyle = 'rgba(209, 106, 69, 0.55)';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -280,24 +277,19 @@ export default function SonarWaterfall({ viewMode = 'detection', simActive = tru
       ctx.lineTo(midX, height);
       ctx.stroke();
 
-      // Range grid lines (every 10 meters)
-      ctx.strokeStyle = 'rgba(52, 88, 212, 0.15)';
+      // Range grid lines
+      ctx.strokeStyle = 'rgba(52, 88, 212, 0.16)';
       ctx.setLineDash([4, 4]);
       ctx.lineWidth = 1;
-
-      // Port side markers
       ctx.beginPath();
       ctx.moveTo(midX - 100, 0); ctx.lineTo(midX - 100, height);
       ctx.moveTo(midX - 200, 0); ctx.lineTo(midX - 200, height);
-      ctx.moveTo(midX - 300, 0); ctx.lineTo(midX - 300, height);
-      // Starboard markers
       ctx.moveTo(midX + 100, 0); ctx.lineTo(midX + 100, height);
       ctx.moveTo(midX + 200, 0); ctx.lineTo(midX + 200, height);
-      ctx.moveTo(midX + 300, 0); ctx.lineTo(midX + 300, height);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Top Nadir Label
+      // Top Nadir Pill
       ctx.fillStyle = '#1c2028';
       ctx.fillRect(midX - 58, 6, 116, 16);
       ctx.strokeStyle = '#d16a45';
@@ -309,7 +301,7 @@ export default function SonarWaterfall({ viewMode = 'detection', simActive = tru
       ctx.textAlign = 'center';
       ctx.fillText('NADIR (WATER COLUMN)', midX, 18);
 
-      // Channel Headers
+      // Channel Labels
       ctx.textAlign = 'left';
       ctx.fillStyle = '#838ea3';
       ctx.font = '9px "DM Mono", monospace';
@@ -322,7 +314,7 @@ export default function SonarWaterfall({ viewMode = 'detection', simActive = tru
       ctx.textAlign = 'left';
       ctx.fillStyle = '#626a74';
       ctx.font = '8px "DM Mono", monospace';
-      ctx.fillText(`SWATH: 50.0m · BEAM: 50° · AUV HEADING: 042° · PING: #${Math.floor(state.ping)}`, 12, height - 8);
+      ctx.fillText(`SWATH: 50.0m · BEAM: 50° · AUV HEADING: 042° · PING: #${Math.floor(pingCounter)}`, 12, height - 8);
 
       ctx.textAlign = 'right';
       const modeNames = {
@@ -332,9 +324,9 @@ export default function SonarWaterfall({ viewMode = 'detection', simActive = tru
       };
       ctx.fillText(modeNames[viewMode] || '', width - 12, height - 8);
 
-      // Water flow ping scanline at top
+      // Ping Scanline Indicator
       if (simActive) {
-        ctx.strokeStyle = viewMode === 'raw' ? 'rgba(255, 192, 96, 0.7)' : 'rgba(74, 114, 255, 0.85)';
+        ctx.strokeStyle = viewMode === 'raw' ? 'rgba(255, 192, 96, 0.8)' : 'rgba(74, 114, 255, 0.9)';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(0, 2);
@@ -351,7 +343,7 @@ export default function SonarWaterfall({ viewMode = 'detection', simActive = tru
       isRunning = false;
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, [viewMode, simActive, onPingUpdate]);
+  }, [viewMode]); // Re-renders offscreen texture ONLY when viewMode changes!
 
   return (
     <div className="sonar-canvas-wrap">
@@ -369,4 +361,3 @@ export default function SonarWaterfall({ viewMode = 'detection', simActive = tru
     </div>
   );
 }
-
