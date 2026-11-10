@@ -369,3 +369,4 @@ export default function SonarWaterfall({ viewMode = 'detection', simActive = tru
     </div>
   );
 }
+
