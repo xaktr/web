@@ -6,6 +6,7 @@ import {
   ChevronDown, Command, MousePointer2
 } from 'lucide-react';
 import './styles.css';
+import NemoPage from './NemoPage';
 
 const logoUrl = `${import.meta.env.BASE_URL}logo.svg`;
 
@@ -31,10 +32,30 @@ const skills = [
 ];
 
 function App() {
+  const [currentView, setCurrentView] = useState(() => {
+    const hash = window.location.hash.toLowerCase();
+    if (hash === '#/nemo' || hash === '#/project/nemo' || hash === '#nemo') {
+      return 'nemo';
+    }
+    return 'home';
+  });
   const [activeProject, setActiveProject] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [clock, setClock] = useState(new Date());
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#/nemo' || hash === '#/project/nemo' || hash === '#nemo') {
+        setCurrentView('nemo');
+      } else {
+        setCurrentView('home');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -49,6 +70,28 @@ function App() {
   }, [activeProject, menuOpen]);
 
   const closeMenu = () => setMenuOpen(false);
+
+  const openNemo = () => {
+    window.location.hash = '#/project/nemo';
+    setCurrentView('nemo');
+  };
+
+  const goHome = (targetSection = 'work') => {
+    setCurrentView('home');
+    window.location.hash = `#${targetSection}`;
+    setTimeout(() => {
+      const el = document.getElementById(targetSection);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 50);
+  };
+
+  if (currentView === 'nemo') {
+    return <NemoPage onBack={() => goHome('work')} />;
+  }
 
   return (
     <div className="site-shell">
@@ -153,7 +196,17 @@ function App() {
             </div>
             <div className="project-list">
               {projects.map((project) => (
-                <button className={`project-row ${project.tone}`} key={project.number} onClick={() => setActiveProject(project)}>
+                <button
+                  className={`project-row ${project.tone}`}
+                  key={project.number}
+                  onClick={() => {
+                    if (project.title.toLowerCase() === 'nemo') {
+                      openNemo();
+                    } else {
+                      setActiveProject(project);
+                    }
+                  }}
+                >
                   <span className="project-number">{project.number}</span>
                   <span className="project-mark">{project.mark}</span>
                   <span className="project-main">
