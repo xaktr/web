@@ -6,6 +6,7 @@ import {
   Radar, Anchor, MapPin, HardDrive, Zap, BookOpen, ExternalLink
 } from 'lucide-react';
 import './nemo.css';
+import SonarWaterfall from './SonarWaterfall';
 
 export default function NemoPage({ onBack }) {
   const logoUrl = `${import.meta.env.BASE_URL}logo.svg`;
@@ -182,40 +183,14 @@ export default function NemoPage({ onBack }) {
           </div>
 
           <div className="sonar-box-body">
-            <div className={`sonar-screen ${viewMode}`}>
-              <div className="sonar-swath-grid" />
-              <div className="sonar-nadir-line" />
-              <div className="sonar-nadir-label">NADIR GAP (WATER COLUMN BLIND ZONE)</div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--mono)', fontSize: '10px', color: '#687387' }}>
-                <span>PORT CHANNEL [-25.0m]</span>
-                <span>STARBOARD CHANNEL [+25.0m]</span>
-              </div>
-
-              {/* Detected Anomaly Bounding Box (Shown in Detection Mode) */}
-              {viewMode === 'detection' && (
-                <>
-                  <div className="sonar-target-box">
-                    <span className="target-badge">YOLO26n · DEBRIS_01</span>
-                    <div className="target-details">
-                      <div>CLASS: GHOST_NET / DERELICT GEAR</div>
-                      <div>CONFIDENCE: 95.4% · RANGE: {currentRange}m</div>
-                      <div>GEO: 12°58'24.8"N, 80°15'09.2"E</div>
-                    </div>
-                  </div>
-
-                  {/* Physics-Informed Shadow Mask */}
-                  <div className="sonar-shadow-mask">
-                    <span className="sonar-shadow-label">ACOUSTIC SHADOW (PHYSICS FEATURE)</span>
-                  </div>
-                </>
-              )}
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--mono)', fontSize: '9px', color: '#525b6c' }}>
-                <span>SWATH WIDTH: 50.0m · BEAM ANGLE: 50°</span>
-                <span>MODE: {viewMode.toUpperCase()}</span>
-              </div>
-            </div>
+            <SonarWaterfall
+              viewMode={viewMode}
+              simActive={simActive}
+              onPingUpdate={(p, r) => {
+                setPingCount(p);
+                setCurrentRange(r);
+              }}
+            />
 
             {/* Telemetry Row */}
             <div className="sonar-telemetry-row">
