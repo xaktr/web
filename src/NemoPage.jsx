@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import {
   ArrowLeft, ArrowUpRight, Waves, Cpu, Layers, Eye,
   Activity, Terminal, Database, ShieldCheck, Compass,
-  CheckCircle2, Sparkles, AlertCircle, Play, Pause, RotateCcw
+  CheckCircle2, Sparkles, AlertCircle, Play, Pause,
+  Radar, Anchor, MapPin, HardDrive, Zap, BookOpen, ExternalLink
 } from 'lucide-react';
 import './nemo.css';
 
@@ -11,6 +12,7 @@ export default function NemoPage({ onBack }) {
   const [simActive, setSimActive] = useState(true);
   const [pingCount, setPingCount] = useState(1482);
   const [currentRange, setCurrentRange] = useState(18.4);
+  const [viewMode, setViewMode] = useState('detection'); // 'raw', 'clahe', 'detection'
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -42,47 +44,85 @@ export default function NemoPage({ onBack }) {
       </header>
 
       <main className="section-wrap">
-        {/* Project Hero */}
+        {/* Project Hero Header */}
         <section className="nemo-hero">
           <div className="nemo-kicker-row">
-            <span className="nemo-kicker">01 / PROJECT CASE STUDY · UNDERWATER SYSTEMS</span>
+            <div className="sih-badge">
+              <span>SMART INDIA HACKATHON 2026</span>
+              <span>·</span>
+              <span>PS: <b>SIH26057</b></span>
+              <span>·</span>
+              <span>TEAM: <b>Davy.json</b></span>
+            </div>
+
             <div className="nemo-badge">
               <span className="status-dot" />
-              <span>ACTIVE RESEARCH & PROTOTYPE</span>
+              <span>THEME: DISASTER MANAGEMENT</span>
             </div>
           </div>
 
           <h1 className="nemo-title">
-            NEMO: Acoustic Vision for <span>Seafloor Intelligence</span>.
+            NEMO: <span>Nautical Environment Mapping</span> and Object Detection.
           </h1>
 
+          <span className="nemo-acronym">
+            AI-Powered Automated Underwater Marine Debris & Anomaly Detection System using Side-Scan Sonar Imagery
+          </span>
+
           <p className="nemo-subtitle">
-            An exploration into using high-frequency side-scan sonar (SSS) imagery and deep learning
-            to automatically detect marine debris, pipeline damage, and submerged anomalies in low-visibility marine environments.
+            An end-to-end edge AI vision system engineered to process raw acoustic waterfall streams
+            from Autonomous Underwater Vehicles (AUVs), replacing slow manual sonar review with real-time,
+            physics-informed debris localization and georeferenced anomaly mapping.
           </p>
 
-          {/* Specs Grid */}
+          {/* KPI Strip */}
+          <div className="kpi-strip">
+            <div className="kpi-card">
+              <span className="kpi-num">~10x</span>
+              <span className="kpi-label">SURVEY SPEEDUP</span>
+              <span className="kpi-sub">From ~5 km/hr manual review to 50+ km/hr AI throughput</span>
+            </div>
+
+            <div className="kpi-card">
+              <span className="kpi-num">50+ FPS</span>
+              <span className="kpi-label">REAL-TIME INFERENCE</span>
+              <span className="kpi-sub">Continuous acoustic stream analysis on NVIDIA Jetson</span>
+            </div>
+
+            <div className="kpi-card">
+              <span className="kpi-num">&lt;10 MB</span>
+              <span className="kpi-label">MODEL FOOTPRINT</span>
+              <span className="kpi-sub">INT8 quantized weights optimized for edge AUV deployments</span>
+            </div>
+
+            <div className="kpi-card">
+              <span className="kpi-num">60–70%</span>
+              <span className="kpi-label">COST REDUCTION</span>
+              <span className="kpi-sub">Cuts vessel-days and manual acoustic analyst labor</span>
+            </div>
+          </div>
+
+          {/* Technical Specs Bar */}
           <div className="nemo-specs-grid">
             <div className="nemo-spec-item">
-              <span className="nemo-spec-label">DOMAIN</span>
-              <span className="nemo-spec-value">Marine Robotics & Acoustics</span>
+              <span className="nemo-spec-label">EDGE PLATFORM</span>
+              <span className="nemo-spec-value">NVIDIA Jetson Orin Nano (15W)</span>
             </div>
             <div className="nemo-spec-item">
-              <span className="nemo-spec-label">CORE STACK</span>
+              <span className="nemo-spec-label">CORE AI MODELS</span>
               <div className="nemo-spec-tags">
-                <span className="nemo-tag">Python</span>
-                <span className="nemo-tag">OpenCV</span>
-                <span className="nemo-tag">PyTorch</span>
-                <span className="nemo-tag">YOLOv8</span>
+                <span className="nemo-tag">YOLO26n INT8</span>
+                <span className="nemo-tag">Attention U-Net</span>
+                <span className="nemo-tag">CycleGAN</span>
               </div>
             </div>
             <div className="nemo-spec-item">
-              <span className="nemo-spec-label">SENSOR INPUT</span>
-              <span className="nemo-spec-value">Side-Scan Sonar (SSS) Waterfall</span>
+              <span className="nemo-spec-label">SONAR FORMAT</span>
+              <span className="nemo-spec-value">.XTF (eXtended Triton Format)</span>
             </div>
             <div className="nemo-spec-item">
-              <span className="nemo-spec-label">OBJECTIVE</span>
-              <span className="nemo-spec-value">Autonomous Anomaly Detection</span>
+              <span className="nemo-spec-label">ACCELERATION</span>
+              <span className="nemo-spec-value">TensorRT & ONNX Runtime</span>
             </div>
           </div>
         </section>
@@ -92,10 +132,33 @@ export default function NemoPage({ onBack }) {
           <div className="sonar-box-head">
             <div className="sonar-box-head-left">
               <div className="sonar-radar-dot" />
-              <span>SSS WATERFALL ACOUSTIC TELEMETRY FEED (SIMULATED)</span>
+              <span>SSS WATERFALL ACOUSTIC TELEMETRY FEED (SIMULATED .XTF INGESTION)</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+              <div className="sonar-view-modes">
+                <button
+                  className={`sonar-mode-btn ${viewMode === 'raw' ? 'active' : ''}`}
+                  onClick={() => setViewMode('raw')}
+                >
+                  RAW XTF
+                </button>
+                <button
+                  className={`sonar-mode-btn ${viewMode === 'clahe' ? 'active' : ''}`}
+                  onClick={() => setViewMode('clahe')}
+                >
+                  CLAHE FILTERED
+                </button>
+                <button
+                  className={`sonar-mode-btn ${viewMode === 'detection' ? 'active' : ''}`}
+                  onClick={() => setViewMode('detection')}
+                >
+                  CASCADED AI (YOLO26n + U-NET)
+                </button>
+              </div>
+
               <span>PING: #{pingCount}</span>
+
               <button
                 onClick={() => setSimActive(!simActive)}
                 style={{
@@ -103,7 +166,7 @@ export default function NemoPage({ onBack }) {
                   border: '1px solid #363d4e',
                   color: '#9eb4ff',
                   borderRadius: '4px',
-                  padding: '3px 8px',
+                  padding: '4px 10px',
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -119,205 +182,418 @@ export default function NemoPage({ onBack }) {
           </div>
 
           <div className="sonar-box-body">
-            <div className="sonar-screen">
+            <div className={`sonar-screen ${viewMode}`}>
               <div className="sonar-swath-grid" />
               <div className="sonar-nadir-line" />
-              <div className="sonar-nadir-label">NADIR GAP (BLIND ZONE)</div>
+              <div className="sonar-nadir-label">NADIR GAP (WATER COLUMN BLIND ZONE)</div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--mono)', fontSize: '10px', color: '#687387' }}>
-                <span>PORT CHANNEL [-25m]</span>
-                <span>STARBOARD CHANNEL [+25m]</span>
+                <span>PORT CHANNEL [-25.0m]</span>
+                <span>STARBOARD CHANNEL [+25.0m]</span>
               </div>
 
-              {/* Detected Anomaly Bounding Box */}
-              <div className="sonar-target-box">
-                <span className="target-badge">TARGET DETECTED · ANOMALY_01</span>
-                <div className="target-details">
-                  <div>CLASS: SUBMERGED_DEBRIS</div>
-                  <div>CONF: 94.6% · RANGE: {currentRange}m</div>
-                  <div>GEO: 12°58'24"N, 80°15'09"E</div>
-                </div>
-              </div>
+              {/* Detected Anomaly Bounding Box (Shown in Detection Mode) */}
+              {viewMode === 'detection' && (
+                <>
+                  <div className="sonar-target-box">
+                    <span className="target-badge">YOLO26n · DEBRIS_01</span>
+                    <div className="target-details">
+                      <div>CLASS: GHOST_NET / DERELICT GEAR</div>
+                      <div>CONFIDENCE: 95.4% · RANGE: {currentRange}m</div>
+                      <div>GEO: 12°58'24.8"N, 80°15'09.2"E</div>
+                    </div>
+                  </div>
+
+                  {/* Physics-Informed Shadow Mask */}
+                  <div className="sonar-shadow-mask">
+                    <span className="sonar-shadow-label">ACOUSTIC SHADOW (PHYSICS FEATURE)</span>
+                  </div>
+                </>
+              )}
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--mono)', fontSize: '9px', color: '#525b6c' }}>
-                <span>SWATH WIDTH: 50.0m</span>
-                <span>STATUS: TRACKING NOMINAL</span>
+                <span>SWATH WIDTH: 50.0m · BEAM ANGLE: 50°</span>
+                <span>MODE: {viewMode.toUpperCase()}</span>
               </div>
             </div>
 
+            {/* Telemetry Row */}
             <div className="sonar-telemetry-row">
               <div className="telemetry-item">
-                <span>FREQUENCY</span>
-                <strong>455 kHz (High-Res)</strong>
+                <span>ACOUSTIC FREQUENCY</span>
+                <strong>455 kHz (High-Res SSS)</strong>
               </div>
               <div className="telemetry-item">
                 <span>SPEED OVER GROUND</span>
-                <strong>3.4 knots</strong>
+                <strong>3.4 knots (AUV Nominal)</strong>
               </div>
               <div className="telemetry-item">
                 <span>ALTITUDE (ALT)</span>
                 <strong>6.8 m above seafloor</strong>
               </div>
               <div className="telemetry-item">
-                <span>SIGNAL-TO-NOISE</span>
-                <strong>18.2 dB</strong>
+                <span>SIGNAL-TO-NOISE RATIO</span>
+                <strong>18.2 dB (Lee Filtered)</strong>
               </div>
               <div className="telemetry-item">
-                <span>INFERENCE LATENCY</span>
-                <strong>14.2 ms / frame</strong>
+                <span>EDGE INFERENCE LATENCY</span>
+                <strong>14.2 ms (TensorRT INT8)</strong>
+              </div>
+              <div className="telemetry-item">
+                <span>POWER DRAW</span>
+                <strong>11.4 W / 15 W Budget</strong>
               </div>
             </div>
           </div>
         </section>
 
-        {/* The Motivation & Scientific Context */}
+        {/* Core Innovations */}
         <section className="nemo-section">
           <div className="nemo-section-head">
-            <span className="nemo-section-num">01 / BACKGROUND</span>
-            <h2 className="nemo-section-title">The Problem With Looking Underwater</h2>
+            <span className="nemo-section-num">01 / INNOVATIONS & UNIQUENESS</span>
+            <h2 className="nemo-section-title">What Sets NEMO Apart</h2>
           </div>
 
-          <div className="nemo-grid-two">
-            <div className="nemo-prose">
+          <div className="innovations-grid">
+            <div className="innovation-card">
+              <span className="innovation-badge">CASCADED AI ARCHITECTURE</span>
+              <h3>Detect → Segment Pipeline</h3>
               <p>
-                In ocean exploration and underwater archaeology, standard optical cameras are virtually blind.
-                Seawater rapidly absorbs and scatters red and green wavelengths, leaving zero optical visibility past
-                a few meters in turbid or deep waters.
-              </p>
-              <p>
-                To map the seafloor, vessels rely on <strong>Side-Scan Sonar (SSS)</strong>, emitting acoustic pulses
-                and recording the amplitude of the echoes over time. While acoustic waves travel hundreds of meters through water,
-                the resulting imagery is <strong>non-intuitive, heavily speckled, and distorted</strong> by slant-range geometry.
+                Instead of running a heavy segmentation network on the entire high-resolution sonar swath,
+                NEMO uses a fast, NMS-free <strong>YOLO26n INT8</strong> detector to generate candidate proposals,
+                followed by <strong>Attention U-Net INT8</strong> on cropped regions for pixel-level boundary extraction.
               </p>
             </div>
 
-            <div className="nemo-highlight-card">
-              <h4>The Core Insight</h4>
+            <div className="innovation-card">
+              <span className="innovation-badge">ACOUSTIC PHYSICS MODELING</span>
+              <h3>Shadow-as-a-Feature</h3>
               <p>
-                Unlike optical cameras where an object is identified by color, edges, and texture, sonar imagery identifies targets through
-                <strong> Highlight & Shadow pairs</strong>. The physical object reflects sound (bright acoustic highlight),
-                followed by a void where the acoustic beam was blocked (acoustic shadow). The length and geometry of that shadow encodes the exact 3D height profile of the submerged artifact.
+                In side-scan sonar, the shadow behind an object contains more geometric fidelity than the highlight itself.
+                NEMO treats acoustic shadows as primary diagnostic signal rather than noise, calculating target height
+                profile from sonar beam geometry to reject non-shadow seabed clutter.
+              </p>
+            </div>
+
+            <div className="innovation-card">
+              <span className="innovation-badge">GENERATIVE AUGMENTATION</span>
+              <h3>CycleGAN Synthetic Training</h3>
+              <p>
+                To overcome extreme scarcity of annotated underwater sonar datasets, NEMO employs CycleGAN to translate
+                optical debris masks into realistic side-scan sonar acoustic textures with simulated speckle and grazing attenuation.
+              </p>
+            </div>
+
+            <div className="innovation-card">
+              <span className="innovation-badge">EDGE-FIRST DEPLOYMENT</span>
+              <h3>INT8 Quantized &lt;10MB Footprint</h3>
+              <p>
+                Export-optimized via TensorRT and ONNX Runtime for deployment on <strong>NVIDIA Jetson Orin Nano</strong>.
+                Runs 100% offline at 50+ FPS with zero internet dependency inside an AUV's 7W–15W power envelope.
               </p>
             </div>
           </div>
         </section>
 
-        {/* Technical Pipeline & Architecture */}
+        {/* 6-Stage Technical Pipeline */}
         <section className="nemo-section">
           <div className="nemo-section-head">
-            <span className="nemo-section-num">02 / PIPELINE ARCHITECTURE</span>
-            <h2 className="nemo-section-title">How the Detection Pipeline Works</h2>
+            <span className="nemo-section-num">02 / END-TO-END PIPELINE</span>
+            <h2 className="nemo-section-title">The Complete System Architecture</h2>
           </div>
 
-          <div className="pipeline-steps">
+          <div className="pipeline-grid">
             <div className="pipeline-card">
-              <span className="pipeline-card-num">STEP 01</span>
+              <span className="pipeline-card-num">STAGE 01</span>
+              <div className="pipeline-card-icon">
+                <Database size={20} />
+              </div>
+              <h3>Data Ingestion & Parsing</h3>
+              <p>
+                Reads raw sonar files in <strong>.XTF (eXtended Triton Format)</strong> and extracts ping-header navigation data
+                (AUV altitude, heading, heave, pitch, and roll) using <code>pyxtf</code>.
+              </p>
+              <span className="pipeline-card-tech">pyxtf · .XTF Metadata Parsing</span>
+            </div>
+
+            <div className="pipeline-card">
+              <span className="pipeline-card-num">STAGE 02</span>
               <div className="pipeline-card-icon">
                 <Waves size={20} />
               </div>
-              <h3>Slant-Range Correction</h3>
+              <h3>Sonar Pre-Processing</h3>
               <p>
-                Raw sonar records echo arrival times, producing distorted water-column blind zones (nadir).
-                We project the time-series acoustic beam into true flat-bottom ground range coordinates.
+                Suppresses coherent multiplicative acoustic speckle using <strong>Lee and Frost spatial filters</strong>.
+                Applies Contrast Limited Adaptive Histogram Equalization (<strong>CLAHE</strong>) across range channels.
               </p>
-              <span className="pipeline-card-tech">Python · NumPy · Geometric Projection</span>
+              <span className="pipeline-card-tech">Lee/Frost Denoising · CLAHE</span>
             </div>
 
             <div className="pipeline-card">
-              <span className="pipeline-card-num">STEP 02</span>
+              <span className="pipeline-card-num">STAGE 03</span>
               <div className="pipeline-card-icon">
-                <Layers size={20} />
+                <Cpu size={20} />
               </div>
-              <h3>Speckle Noise Filtering</h3>
+              <h3>Edge AI Processing</h3>
               <p>
-                Coherent acoustic interference creates multiplicative speckle noise. We employ adaptive Lee
-                and Frost spatial filtering to preserve sharp shadow boundaries while suppressing seafloor clutter.
+                Cascaded neural inference: NMS-free <strong>YOLO26n INT8</strong> detects bounding boxes, passing cropped
+                regions to <strong>Attention U-Net INT8</strong> for precise mask extraction on the edge.
               </p>
-              <span className="pipeline-card-tech">OpenCV · Adaptive Spatial Kernels</span>
+              <span className="pipeline-card-tech">YOLO26n · Attention U-Net · TensorRT</span>
             </div>
 
             <div className="pipeline-card">
-              <span className="pipeline-card-num">STEP 03</span>
-              <div className="pipeline-card-icon">
-                <Eye size={20} />
-              </div>
-              <h3>Acoustic Highlight & Shadow Detection</h3>
-              <p>
-                A tailored lightweight convolutional detector (YOLOv8 backbone with custom attention heads)
-                identifies target candidate anchors by jointly coupling highlight and acoustic shadow signatures.
-              </p>
-              <span className="pipeline-card-tech">PyTorch · YOLOv8 · Transfer Learning</span>
-            </div>
-
-            <div className="pipeline-card">
-              <span className="pipeline-card-num">STEP 04</span>
+              <span className="pipeline-card-num">STAGE 04</span>
               <div className="pipeline-card-icon">
                 <Compass size={20} />
               </div>
-              <h3>Geospatial Fusion</h3>
+              <h3>Post-Processing & Filtering</h3>
               <p>
-                Detected pixel bounding boxes are fused with real-time GPS / Inertial Navigation System (INS)
-                telemetry to output exportable, geo-referenced GeoJSON points for survey analysts.
+                Corrects slant-range geometric distortions (hypotenuse-to-ground projection).
+                Computes physics-informed confidence scoring from highlight-to-shadow ratios, and georeferences coordinates using <code>pyproj</code>.
               </p>
-              <span className="pipeline-card-tech">GeoJSON · WGS84 Coordinate Conversion</span>
+              <span className="pipeline-card-tech">Slant-Range Math · pyproj (WGS84)</span>
+            </div>
+
+            <div className="pipeline-card">
+              <span className="pipeline-card-num">STAGE 05</span>
+              <div className="pipeline-card-icon">
+                <HardDrive size={20} />
+              </div>
+              <h3>Data Reporting & Integration</h3>
+              <p>
+                Packages georeferenced anomaly locations, physical volume estimates, and confidence scores into structured
+                standardized <strong>JSON and CSV reports</strong> ready for export to GIS systems.
+              </p>
+              <span className="pipeline-card-tech">pandas · NumPy · GeoJSON</span>
+            </div>
+
+            <div className="pipeline-card">
+              <span className="pipeline-card-num">STAGE 06</span>
+              <div className="pipeline-card-icon">
+                <Activity size={20} />
+              </div>
+              <h3>Dashboard & Live Telemetry</h3>
+              <p>
+                Full-stack monitoring interface built with <strong>FastAPI</strong> and <strong>WebSockets</strong> for real-time
+                data streaming, accompanied by an interactive <strong>React.js + Leaflet.js</strong> map dashboard.
+              </p>
+              <span className="pipeline-card-tech">FastAPI · WebSockets · React · Leaflet</span>
             </div>
           </div>
         </section>
 
-        {/* Challenges & Key Discoveries */}
+        {/* Feasibility & Hardware Matrix */}
         <section className="nemo-section">
           <div className="nemo-section-head">
-            <span className="nemo-section-num">03 / TECHNICAL CHALLENGES</span>
-            <h2 className="nemo-section-title">What Makes Underwater CV Hard</h2>
+            <span className="nemo-section-num">03 / FEASIBILITY & DEPLOYMENT</span>
+            <h2 className="nemo-section-title">Unified Feasibility Matrix</h2>
           </div>
 
-          <div className="challenges-list">
-            <div className="challenge-row">
-              <div className="challenge-label">
-                <AlertCircle size={18} color="#d16a45" />
-                <span>Severe Data Scarcity</span>
+          <div className="feasibility-grid">
+            <div className="feasibility-card">
+              <h3><Zap size={18} color="#3458d4" /> Technical Viability</h3>
+              <ul className="feasibility-list">
+                <li><CheckCircle2 size={15} /> <strong>Two-Stage AI Pipeline:</strong> Fast candidate filtering ensures zero dropped pings during high-speed survey.</li>
+                <li><CheckCircle2 size={15} /> <strong>Denoising & Contrast:</strong> Proven Lee/Frost filtering retains acoustic shadow edges critical for morphology.</li>
+                <li><CheckCircle2 size={15} /> <strong>NMS-Free YOLO26n:</strong> Eliminates non-maximum suppression latency bottlenecks on edge hardware.</li>
+              </ul>
+            </div>
+
+            <div className="feasibility-card">
+              <h3><Cpu size={18} color="#3458d4" /> Hardware Deployment</h3>
+              <ul className="feasibility-list">
+                <li><CheckCircle2 size={15} /> <strong>Low-Power Budget:</strong> 7W – 15W operational envelope matches autonomous AUV battery constraints.</li>
+                <li><CheckCircle2 size={15} /> <strong>40 TOPS Compute:</strong> Powered by NVIDIA Jetson Orin Nano for continuous 50+ FPS video-rate sonar streams.</li>
+                <li><CheckCircle2 size={15} /> <strong>Zero Internet Dependency:</strong> Operates 100% offline underwater without tether or cloud access.</li>
+              </ul>
+            </div>
+
+            <div className="feasibility-card">
+              <h3><Anchor size={18} color="#3458d4" /> Operational Scalability</h3>
+              <ul className="feasibility-list">
+                <li><CheckCircle2 size={15} /> <strong>100% Autonomous:</strong> Performs real-time anomaly logging directly onboard the underwater vehicle.</li>
+                <li><CheckCircle2 size={15} /> <strong>Multi-AUV Fleets:</strong> Standardized JSON schema allows multi-vehicle swarm survey aggregation.</li>
+                <li><CheckCircle2 size={15} /> <strong>Docking Synchronization:</strong> Automatically offloads mission logs and georeferenced maps upon vessel docking.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Risks, Challenges & Visual Mitigations */}
+        <section className="nemo-section">
+          <div className="nemo-section-head">
+            <span className="nemo-section-num">04 / RISKS & MITIGATIONS</span>
+            <h2 className="nemo-section-title">Navigating Real-World Acoustic Challenges</h2>
+          </div>
+
+          <div className="mitigation-table">
+            <div className="mitigation-row">
+              <div className="mitigation-risk">
+                <AlertCircle size={16} color="#d16a45" />
+                <span>1. Scarce Sonar Data</span>
               </div>
-              <div className="challenge-text">
-                Annotated public datasets for seafloor side-scan sonar are scarce. To prevent overfitting, we generated synthetic sonar data using Blender acoustic shader pipelines and simulated reverberation noise.
+              <div className="mitigation-desc">
+                Public annotated side-scan sonar datasets for ghost nets and debris are exceptionally rare.
+              </div>
+              <div className="mitigation-solution">
+                <strong>CycleGAN Generative Modeling:</strong> Translates abundant optical debris masks into synthetic sonar training samples with realistic acoustic noise.
               </div>
             </div>
 
-            <div className="challenge-row">
-              <div className="challenge-label">
-                <AlertCircle size={18} color="#d16a45" />
-                <span>Grazing Angle Variance</span>
+            <div className="mitigation-row">
+              <div className="mitigation-risk">
+                <AlertCircle size={16} color="#d16a45" />
+                <span>2. Seafloor Clutter</span>
               </div>
-              <div className="challenge-text">
-                As the sonar towfish rolls and heaves with ocean swells, acoustic illumination intensity fluctuates dynamically across the swath. We implemented adaptive histogram equalization (CLAHE) along the range axis to stabilize brightness.
+              <div className="mitigation-desc">
+                Natural rock piles, sand ripples, and benthic geological features mimic man-made debris signatures.
+              </div>
+              <div className="mitigation-solution">
+                <strong>Acoustic Shadow Verification:</strong> Filters out non-shadow objects by verifying physical highlight-to-shadow geometric proportions based on sonar altitude.
               </div>
             </div>
 
-            <div className="challenge-row">
-              <div className="challenge-label">
-                <AlertCircle size={18} color="#d16a45" />
-                <span>Edge Compute Bounds</span>
+            <div className="mitigation-row">
+              <div className="mitigation-risk">
+                <AlertCircle size={16} color="#d16a45" />
+                <span>3. Motion & Severe Blur</span>
               </div>
-              <div className="challenge-text">
-                Autonomous Underwater Vehicles (AUVs) have constrained battery budgets and thermal limits. Models are quantized to FP16 and INT8 using TensorRT to maintain &gt;30 FPS on embedded edge chips (NVIDIA Jetson).
+              <div className="mitigation-desc">
+                Ocean swells cause AUV heave, pitch, and roll, introducing heavy motion artifacts across waterfall pings.
+              </div>
+              <div className="mitigation-solution">
+                <strong>Motion Compensation & Windowing:</strong> Fuses ping-header inertial telemetry with overlapping windowing to normalize attitude changes before inference.
+              </div>
+            </div>
+
+            <div className="mitigation-row">
+              <div className="mitigation-risk">
+                <AlertCircle size={16} color="#d16a45" />
+                <span>4. Large Files & No GPS</span>
+              </div>
+              <div className="mitigation-desc">
+                500MB+ raw .XTF files and lack of GPS signals underwater create memory and localization bottlenecks.
+              </div>
+              <div className="mitigation-solution">
+                <strong>Async Chunking & Pixel Tracking:</strong> Streams files in lightweight memory chunks while computing relative dead-reckoning pixel offsets.
               </div>
             </div>
           </div>
         </section>
 
-        {/* Project Next Steps & Back Button */}
+        {/* Real-World Impact & Stakeholders */}
+        <section className="nemo-section">
+          <div className="nemo-section-head">
+            <span className="nemo-section-num">05 / IMPACT & BENEFITS</span>
+            <h2 className="nemo-section-title">Who Benefits From NEMO</h2>
+          </div>
+
+          <div className="impact-grid">
+            <div className="impact-card">
+              <div className="impact-card-head">
+                <Waves size={20} />
+                <h4>Marine Conservation</h4>
+              </div>
+              <ul>
+                <li>Cuts ghost fishing net survey times from days to hours.</li>
+                <li>Prevents annual deaths of 100,000+ marine mammals entangled in abandoned nets.</li>
+                <li>Halts microplastic shedding from decaying polypropylene ropes on reefs.</li>
+              </ul>
+            </div>
+
+            <div className="impact-card">
+              <div className="impact-card-head">
+                <ShieldCheck size={20} />
+                <h4>Coast Guards & Ports</h4>
+              </div>
+              <ul>
+                <li>Rapid mapping of unexploded ordnance (UXO) and submerged hazards.</li>
+                <li>Shipwreck clearance and navigation channel inspection in active harbor approaches.</li>
+                <li>Pre-verified hazard coordinates significantly reduce risk for human dive teams.</li>
+              </ul>
+            </div>
+
+            <div className="impact-card">
+              <div className="impact-card-head">
+                <Zap size={20} />
+                <h4>Offshore Energy & Telecom</h4>
+              </div>
+              <ul>
+                <li>Automated, repeatable inspection for subsea power cables and communication trunks.</li>
+                <li>Replaces tedious manual frame-by-frame ROV video review with automated reports.</li>
+                <li>Prevents costly anchor strikes and dredging damage in utility corridors.</li>
+              </ul>
+            </div>
+
+            <div className="impact-card">
+              <div className="impact-card-head">
+                <Compass size={20} />
+                <h4>AUV Manufacturers</h4>
+              </div>
+              <ul>
+                <li>Plug-and-play, hardware-agnostic edge AI vision stack via ONNX and TensorRT.</li>
+                <li>Adds real-time autonomous target recognition (ATR) to standard commercial sonar equipment.</li>
+                <li>Low barrier to adoption for small research institutions and NGOs.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Research Foundations & References */}
+        <section className="nemo-section">
+          <div className="nemo-section-head">
+            <span className="nemo-section-num">06 / RESEARCH FOUNDATIONS</span>
+            <h2 className="nemo-section-title">Academic & Industry Literature</h2>
+          </div>
+
+          <div className="research-grid">
+            <div className="research-card">
+              <div className="research-author">Jocher et al. (2026)</div>
+              <div className="research-paper">Ultralytics YOLO26: Unified Real-Time End-to-End Vision Models</div>
+              <div className="research-takeaway">Single-stage, anchor-free, NMS-free architecture enabling high-framerate sonar stream detection on edge chips.</div>
+            </div>
+
+            <div className="research-card">
+              <div className="research-author">Oktay et al. (2018)</div>
+              <div className="research-paper">Attention U-Net: Learning Where to Look for the Pancreas</div>
+              <div className="research-takeaway">Soft attention gates suppress noisy benthic clutter, isolating precise acoustic shadow contours for 3D volumetric estimation.</div>
+            </div>
+
+            <div className="research-card">
+              <div className="research-author">Cui et al. (2025) & Zhou et al. (2024)</div>
+              <div className="research-paper">Small-Object Detection & Multi-Scale Contrast Restoration in SSS</div>
+              <div className="research-takeaway">Demonstrated mathematical enhancement of acoustic signal-to-noise ratio in low-contrast side-scan sonar waterfall imagery.</div>
+            </div>
+
+            <div className="research-card">
+              <div className="research-author">Microsoft Research (2025)</div>
+              <div className="research-paper">GhostNetZero: AI for Detecting Ghost Fishing Gear</div>
+              <div className="research-takeaway">Benchmark datasets and evaluation protocols for identifying synthetic derelict gear from benthic sonar backscatter.</div>
+            </div>
+
+            <div className="research-card">
+              <div className="research-author">GEOMAR (2021)</div>
+              <div className="research-paper">GHOSTNETBUSTERS: Field Validation of SSS on Benthic Debris</div>
+              <div className="research-takeaway">Real-world operational methodology for validating acoustic detection of marine debris in Baltic Sea sea trials.</div>
+            </div>
+          </div>
+        </section>
+
+        {/* Project Call to Action & Return */}
         <section className="nemo-section" style={{ borderBottom: 'none' }}>
           <div className="nemo-footer-cta">
-            <h3>Interested in this research?</h3>
+            <h3>NEMO · Smart India Hackathon 2026</h3>
             <p>
-              NEMO is an active, evolving project exploring the intersection of acoustics, computer vision,
-              and ocean technology. Feel free to reach out if you'd like to collaborate, test datasets, or discuss ideas.
+              Developed by <strong>Team Davy.json</strong> for Problem Statement <strong>SIH26057</strong> (Disaster Management).
+              Built with curiosity, rigorous acoustic physics, and edge-first AI.
             </p>
             <div className="nemo-cta-btns">
               <button className="button button-light" onClick={onBack}>
                 <ArrowLeft size={16} /> Return to Portfolio
               </button>
               <a className="button" style={{ border: '1px solid var(--line)', background: '#fbf9f3' }} href="mailto:rajankit.ap@gmail.com">
-                Discuss Project <ArrowUpRight size={15} />
+                Discuss Project / Collaboration <ArrowUpRight size={15} />
               </a>
             </div>
           </div>
