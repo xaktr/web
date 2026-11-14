@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import {
   ArrowDownRight, ArrowUpRight, ArrowRight, Github, Linkedin, Mail,
   Menu, X, Sparkles, Terminal, Code2, Layers3, ExternalLink, MoveUpRight,
-  ChevronDown, Command, MousePointer2
+  ChevronDown, Command, MousePointer2, Sun, Moon
 } from 'lucide-react';
 import './styles.css';
 import NemoPage from './NemoPage';
@@ -32,6 +32,12 @@ const skills = [
 ];
 
 function App() {
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
   const [currentView, setCurrentView] = useState(() => {
     const hash = window.location.hash.toLowerCase();
     if (hash === '#/nemo' || hash === '#/project/nemo' || hash === '#nemo') {
@@ -43,6 +49,19 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [clock, setClock] = useState(new Date());
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme === 'dark' ? '#0e1015' : '#E9DDD5');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -90,7 +109,7 @@ function App() {
   };
 
   if (currentView === 'nemo') {
-    return <NemoPage onBack={() => goHome('work')} />;
+    return <NemoPage onBack={() => goHome('work')} theme={theme} toggleTheme={toggleTheme} />;
   }
 
   return (
@@ -106,10 +125,28 @@ function App() {
           <a href="#Skills" onClick={closeMenu}><span>03</span> Skills</a>
           <a href="#contact" onClick={closeMenu}><span>04</span> Contact</a>
           <a className="nav-cta" href="#contact" onClick={closeMenu}>Let's talk <ArrowUpRight size={14} /></a>
+          <button
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
         </nav>
-        <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Close menu' : 'Open menu'}>
-          {menuOpen ? <X size={21} /> : <Menu size={21} />}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            className="theme-toggle menu-theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+          <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? 'Close menu' : 'Open menu'}>
+            {menuOpen ? <X size={21} /> : <Menu size={21} />}
+          </button>
+        </div>
       </header>
 
       <main>

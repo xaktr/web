@@ -3,12 +3,13 @@ import {
   ArrowLeft, ArrowUpRight, Waves, Cpu, Layers, Eye,
   Activity, Terminal, Database, ShieldCheck, Compass,
   CheckCircle2, Sparkles, AlertCircle, Play, Pause,
-  Radar, Anchor, MapPin, HardDrive, Zap, BookOpen, ExternalLink
+  Radar, Anchor, MapPin, HardDrive, Zap, BookOpen, ExternalLink,
+  Sun, Moon
 } from 'lucide-react';
 import './nemo.css';
 import SonarWaterfall from './SonarWaterfall';
 
-export default function NemoPage({ onBack }) {
+export default function NemoPage({ onBack, theme, toggleTheme }) {
   const logoUrl = `${import.meta.env.BASE_URL}logo.svg`;
   const [simActive, setSimActive] = useState(true);
   const [pingCount, setPingCount] = useState(1482);
@@ -34,10 +35,23 @@ export default function NemoPage({ onBack }) {
           <img src={logoUrl} alt="AR" className="site-logo" />
         </a>
 
-        <button className="nemo-back-btn" onClick={onBack}>
-          <ArrowLeft size={15} />
-          <span>BACK TO PORTFOLIO</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {toggleTheme && (
+            <button
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
+          )}
+
+          <button className="nemo-back-btn" onClick={onBack}>
+            <ArrowLeft size={15} />
+            <span>BACK TO PORTFOLIO</span>
+          </button>
+        </div>
       </header>
 
       <main className="section-wrap">

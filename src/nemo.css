@@ -825,3 +825,259 @@
     gap: 8px;
   }
 }
+
+/* ==========================================================================
+   NEMO DARK MODE
+   ========================================================================== */
+
+[data-theme="dark"] .nemo-page {
+  background: #0e1015;
+  color: #ededed;
+}
+
+[data-theme="dark"] .nemo-topbar {
+  background: rgba(14, 16, 21, 0.94);
+  border-color: #242933;
+}
+
+[data-theme="dark"] .nemo-back-btn {
+  background: #161920;
+  border-color: #2e3542;
+  color: #d0d4dd;
+}
+
+[data-theme="dark"] .nemo-back-btn:hover {
+  border-color: #4a72ff;
+  color: #4a72ff;
+  background: #1e222b;
+}
+
+[data-theme="dark"] .sih-badge {
+  background: #161920;
+  border-color: #2e3542;
+  color: #d0d4dd;
+}
+
+[data-theme="dark"] .sih-badge b {
+  color: #4a72ff;
+}
+
+[data-theme="dark"] .nemo-badge {
+  background: rgba(74, 114, 255, 0.1);
+  border-color: rgba(74, 114, 255, 0.3);
+  color: #6a8aff;
+}
+
+[data-theme="dark"] .nemo-title {
+  color: #f5f6f8;
+}
+
+[data-theme="dark"] .nemo-acronym {
+  color: #9ea3ac;
+}
+
+[data-theme="dark"] .nemo-subtitle {
+  color: #858b96;
+}
+
+[data-theme="dark"] .kpi-card {
+  background: #161920;
+  border-color: #242933;
+}
+
+[data-theme="dark"] .kpi-num {
+  color: #4a72ff;
+}
+
+[data-theme="dark"] .kpi-sub {
+  color: #858b96;
+}
+
+[data-theme="dark"] .nemo-specs-grid {
+  background: #161920;
+  border-color: #242933;
+}
+
+[data-theme="dark"] .nemo-spec-value {
+  color: #f0f2f5;
+}
+
+[data-theme="dark"] .nemo-tag {
+  background: #1e222b;
+  border-color: #2e3542;
+  color: #d0d4dd;
+}
+
+[data-theme="dark"] .nemo-section {
+  border-color: #242933;
+}
+
+[data-theme="dark"] .nemo-hero {
+  border-color: #242933;
+}
+
+[data-theme="dark"] .nemo-section-num {
+  color: #4a72ff;
+}
+
+[data-theme="dark"] .nemo-section-title {
+  color: #f5f6f8;
+}
+
+[data-theme="dark"] .nemo-prose {
+  color: #9ea3ac;
+}
+
+[data-theme="dark"] .nemo-prose strong {
+  color: #f0f2f5;
+}
+
+[data-theme="dark"] .nemo-highlight-card {
+  background: #161920;
+  border-color: #2e3542;
+  border-left-color: #4a72ff;
+}
+
+[data-theme="dark"] .nemo-highlight-card h4 {
+  color: #f0f2f5;
+}
+
+[data-theme="dark"] .nemo-highlight-card p {
+  color: #858b96;
+}
+
+[data-theme="dark"] .innovation-card {
+  background: #161920;
+  border-color: #242933;
+}
+
+[data-theme="dark"] .innovation-card:hover {
+  border-color: #4a72ff;
+}
+
+[data-theme="dark"] .innovation-badge {
+  color: #4a72ff;
+}
+
+[data-theme="dark"] .innovation-card h3 {
+  color: #f0f2f5;
+}
+
+[data-theme="dark"] .innovation-card p {
+  color: #858b96;
+}
+
+[data-theme="dark"] .pipeline-card {
+  background: #161920;
+  border-color: #242933;
+}
+
+[data-theme="dark"] .pipeline-card:hover {
+  border-color: #4a72ff;
+}
+
+[data-theme="dark"] .pipeline-card-num {
+  color: #4a72ff;
+}
+
+[data-theme="dark"] .pipeline-card-icon {
+  background: rgba(74, 114, 255, 0.1);
+  color: #4a72ff;
+}
+
+[data-theme="dark"] .pipeline-card h3 {
+  color: #f0f2f5;
+}
+
+[data-theme="dark"] .pipeline-card p {
+  color: #858b96;
+}
+
+[data-theme="dark"] .pipeline-card-tech {
+  background: #1e222b;
+  color: #82a0ff;
+}
+
+[data-theme="dark"] .feasibility-card {
+  background: #161920;
+  border-color: #242933;
+}
+
+[data-theme="dark"] .feasibility-card h3 {
+  color: #f0f2f5;
+}
+
+[data-theme="dark"] .feasibility-list li {
+  color: #9ea3ac;
+}
+
+[data-theme="dark"] .mitigation-row {
+  background: #161920;
+  border-color: #242933;
+}
+
+[data-theme="dark"] .mitigation-risk {
+  color: #f0f2f5;
+}
+
+[data-theme="dark"] .mitigation-desc {
+  color: #858b96;
+}
+
+[data-theme="dark"] .mitigation-solution {
+  background: #1e222b;
+  color: #f0f2f5;
+  border-left-color: #4a72ff;
+}
+
+[data-theme="dark"] .impact-card {
+  background: #161920;
+  border-color: #242933;
+}
+
+[data-theme="dark"] .impact-card h4 {
+  color: #f0f2f5;
+}
+
+[data-theme="dark"] .impact-card ul {
+  color: #858b96;
+}
+
+[data-theme="dark"] .research-card {
+  background: #161920;
+  border-color: #242933;
+}
+
+[data-theme="dark"] .research-card:hover {
+  border-color: #4a72ff;
+}
+
+[data-theme="dark"] .research-author {
+  color: #4a72ff;
+}
+
+[data-theme="dark"] .research-paper {
+  color: #f0f2f5;
+}
+
+[data-theme="dark"] .research-takeaway {
+  color: #858b96;
+}
+
+[data-theme="dark"] .nemo-footer-cta h3 {
+  color: #f5f6f8;
+}
+
+[data-theme="dark"] .nemo-footer-cta p {
+  color: #858b96;
+}
+
+[data-theme="dark"] .nemo-footer-cta a.button {
+  background: #161920 !important;
+  color: #ededed !important;
+  border-color: #2e3542 !important;
+}
+
+[data-theme="dark"] .nemo-footer-cta a.button:hover {
+  border-color: #4a72ff !important;
+}
