@@ -19,5 +19,5 @@ npm run dev
 npm run build
 ```
 
-Deployed automatically to [aktr.me](https://aktr.me) via GitHub Actions.
+Deployed to [aktr.me](https://aktr.me) via Cloudflare.
 # web
