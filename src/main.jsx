@@ -55,7 +55,7 @@ function App() {
     localStorage.setItem('theme', theme);
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      meta.setAttribute('content', theme === 'dark' ? '#0e1015' : '#E9DDD5');
+      meta.setAttribute('content', theme === 'dark' ? '#1a1714' : '#E9DDD5');
     }
   }, [theme]);
 
@@ -177,7 +177,7 @@ function App() {
                 </div>
                 <i />
               </div>
-              <div className="art-label art-label-top"><span>FIG. 001</span><span>THE WORK IN PROGRESS</span></div>
+              <div className="art-label art-label-top"><span>THE WORK IN PROGRESS</span></div>
               <div className="art-label art-label-bottom"><span className="art-cross">+</span><span>LEARN / BUILD / REPEAT</span></div>
               <div className="float-note note-one"><Code2 size={15} /><span>curiosity.exe</span></div>
               <div className="float-note note-two"><Sparkles size={14} /><span>ideas in motion</span></div>
