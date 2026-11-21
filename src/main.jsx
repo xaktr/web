@@ -157,7 +157,7 @@ function App() {
           <div className="hero-layout">
             <div className="hero-copy">
               <p className="hero-pretitle">HELLO, INTERNET. I'M</p>
-              <h1>Ankit Raj<span className="title-period">.</span></h1>
+              <h1>Ankit Raj</h1>
               <div className="hero-role"><span className="role-line" /> <span> CSE UNDERGRAD <b>·</b> QUIET OBSERVER <b>·</b> CURIOUS MIND</span></div>
               <p className="hero-description">I'm a second-year Computer Science undergrad drawn to the questions hiding beneath the surface. I tend to observe first, get curious, and build my way toward an answer.</p>
               <div className="hero-actions">
